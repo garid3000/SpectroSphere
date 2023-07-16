@@ -2,9 +2,11 @@ import time
 import numpy as np
 import cv2
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture()
+cap.open(0)
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
+frame = np.zeros((480, 640, 3), dtype=np.uint8)
 try:
     while 1:
         ret, frame = cap.read()
