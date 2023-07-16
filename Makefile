@@ -2,7 +2,7 @@ hello:
 	echo "Hello, World"
 
 send:
-	rsync --exclude "venv" -rtvzP . pi@"$$(< .ip_development)":~/SpectroSpehere --exclude='*.img'
+	rsync --exclude="venv" --exclude=".mypy_cache" -rtvzP . pi@"$$(< .ip_development)":~/SpectroSpehere --exclude='*.img'
 
 ssh:
 	ssh -t pi@"$$(< .ip_development)" "cd ~/SpectroSpehere; bash"
