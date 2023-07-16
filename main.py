@@ -5,7 +5,8 @@ import cv2
 
 # import board
 # import busio
-from sscan1 import Sscan  # import synscan
+# from sscan1 import Sscan  # import synscan
+from custom_libs.synscan import Sscan
 
 
 # from adafruit_bno08x import (
@@ -28,12 +29,11 @@ smc = Sscan('/dev/ttyUSB0', 9600, 0.2)
 smc.goto(0, 0, True)  # wait unitl the goto 0 0
 
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture()
+cap.open(0)
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-# cap1 = cv2.VideoCapture(2)
-# cap1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
-dBuf_img = np.zeros((4000, 200, 480), dtype='uint8')
+dBuf_img = np.zeros((4000, 200, 480), dtype=np.uint8)
 # dBuf_img1 = np.zeros((4000, 200, 480), dtype='uint8')
 dBuf_ori = np.zeros((4000, 7))
 
