@@ -29,7 +29,8 @@ bno.enable_feature(BNO_REPORT_ACCELEROMETER)
 # smc = Sscan('/dev/ttyUSB0', 9600, 0.2)
 # smc.goto(0,0, True) # wait unitl the goto 0 0
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture()
+cap.open(0)
 cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
 ddir = input('data dir: ')
@@ -48,7 +49,7 @@ os.system("echo \"{}\" >> {}/0000.time".format(ct0, ddir))
 
 
 # 15000
-dBuf_img = np.zeros((20000, 260, 160), dtype='uint8')
+dBuf_img = np.zeros((20000, 260, 160), dtype=np.uint8)
 dBuf_ori = np.zeros((20000, 12))
 
 # exposure
@@ -72,7 +73,7 @@ def exposure(inc) -> None:
     print(
         f'v4l2-ctl -d0 -c exposure_absolute={expovals[expo_ind]}')
 
-    for i in range(10):
+    for _ in range(10):
         cap.grab()       # for syncing
 
 
@@ -85,50 +86,31 @@ for epoch in range(100):
         cap.grab()       # for syncing
     try:
         while count < 20000:
-            # try:
-            i, j, k, r = bno.quaternion
-            # except:
-            #     i, j, k, r = 0, 0, 0, 0
-            #     bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
-            #     bno.enable_feature(BNO_REPORT_MAGNETOMETER)
-            #     bno.enable_feature(BNO_REPORT_ACCELEROMETER)
-
-            # try:
-            acc_x, acc_y, acc_z = bno.acceleration
-            # except:
-            #     acc_x, acc_y, acc_z = 0, 0, 0
-            #     bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
-            #     bno.enable_feature(BNO_REPORT_MAGNETOMETER)
-            #     bno.enable_feature(BNO_REPORT_ACCELEROMETER)
-
-            # try:
-            mag_x, mag_y, mag_z = bno.magnetic  # pylint:disable=no-member
-            # except:
-            #     mag_x, mag_y, mag_z = 0, 0, 0
-            #     bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
-            #     bno.enable_feature(BNO_REPORT_MAGNETOMETER)
-            #     bno.enable_feature(BNO_REPORT_ACCELEROMETER)
+            bno_qua = bno.quaternion
+            bno_acc = bno.acceleration
+            bno_mag = bno.magnetic
 
             ret, frame = cap.read()
 
             if ret:
-                # dBuf_img[count,:,:] = frame[:, 200:400, 0].reshape(200,480)
                 dBuf_img[count, :, :] = frame[55:315, 235:395, 0]  # 260 x 160
-                dBuf_ori[count, :] = [i, j, k, r,
-                                      acc_x, acc_y, acc_z,
-                                      mag_x, mag_y, mag_z,
-                                      time.time()-t0, expo_ind]
+
+                if bno_qua is not None:
+                    dBuf_ori[count, 0:4] = bno_qua
+                if bno_acc is not None:
+                    dBuf_ori[count, 4:7] = bno_acc
+                if bno_mag is not None:
+                    dBuf_ori[count, 7:10] = bno_mag
+
+                dBuf_ori[count, 10] = time.time() - t0
+                dBuf_ori[count, 11] = expo_ind
+                # dBuf_ori[count, :] = [i, j, k, r,
+                #                       acc_x, acc_y, acc_z,
+                #                       mag_x, mag_y, mag_z,
+                #                       time.time()-t0, expo_ind]
                 count += 1
             if count % 50 == 0:
-                print(
-                    (
-                        f"| {count=:6d} "
-                        f"| {i=:6.2f}, {j=:6.2f}, {k=:6.2f}, {r=:6.2f} "
-                        f"| X={acc_x:6.2f} Y={acc_y:6.2x} Z={acc_z:6.2x}"
-                        f"| X={mag_x:6.2f} Y={mag_y:6.2x} Z={mag_z:6.2x}"
-                        f"| {((time.time()-t0)/60):float}mins |"
-                    )
-                )
+                print(f"| {count=:6d} | {dBuf_ori[count, :]}")
 
             if (count % 10 == 0) and (count > 0):   # pass #check exposure here
                 m_gray = np.max(np.mean(
@@ -143,7 +125,7 @@ for epoch in range(100):
                 if np.sum(m_grtr < 90) > 7:
                     inc_expo += 1
 
-                print(m_grtr.astype('uint8'))
+                print(m_grtr.astype(np.uint8))
                 exposure(inc_expo)
 
     except KeyboardInterrupt:
