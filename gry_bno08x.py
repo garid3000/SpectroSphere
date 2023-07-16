@@ -1,8 +1,3 @@
-
-pi@raspberrypi:~/main_v6_1cam_kagoshima_22feb15$ cat gry_bno08x_acc.py
-# SPDX-FileCopyrightText: 2020 Bryan Siepert, written for Adafruit Industries
-#
-# SPDX-License-Identifier: MIT
 import time
 import board
 import busio
@@ -30,33 +25,30 @@ bno.enable_feature(adafruit_bno08x.BNO_REPORT_RAW_MAGNETOMETER)
 
 data = np.zeros((100, 9))
 
-#while True:
+# while True:
 for i in range(100):
     time.sleep(0.1)
 
     accel_x, accel_y, accel_z = bno.acceleration  # pylint:disable=no-member
-    print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (accel_x, accel_y, accel_z), end = '|')
+    gyro_x,  gyro_y,  gyro_z = bno.gyro           # pylint:disable=no-member
+    mag_x,   mag_y,   mag_z = bno.magnetic        # pylint:disable=no-member
 
-    gyro_x, gyro_y, gyro_z = bno.gyro  # pylint:disable=no-member
-    print("X: %0.6f  Y: %0.6f Z: %0.6f rads/s" % (gyro_x, gyro_y, gyro_z), end='|')
+    print(f"X={accel_x:8.6f} Y={accel_y:8.6x} Z={accel_z:8.6x} |", endl='')
+    print(f"X={gyro_x:8.6f}  Y={gyro_y:8.6x}  Z={gyro_z:8.6x}  |", endl='')
+    print(f"X={mag_x:8.6f}   Y={mag_y:8.6x}   Z={mag_z:8.6x}   |", endl='')
 
-    mag_x, mag_y, mag_z = bno.magnetic  # pylint:disable=no-member
-    print("X: %0.6f  Y: %0.6f Z: %0.6f uT" % (mag_x, mag_y, mag_z), end='|')
-
-
-    #data[i,:] = [accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z,mag_x, mag_y, mag_z   ]
+    data[i, :] = [accel_x, accel_y, accel_z,
+                  gyro_x,  gyro_y,  gyro_z,
+                  mag_x,   mag_y,   mag_z]
     if bno.shake:
         print("SHAKE DETECTED!")
+
     print('', end='\r', flush=True)
+
 print()
-if input('save? y/n') == 'y':
+
+if input('Do you want to save it? y/n') == 'y':
     np.save('startof/{}'.format(input('name:')), data)
     print('save')
 else:
     print('no save')
-pi@raspberrypi:~/main_v6_1cam_kagoshima_22feb15$
-
-
-
-
-
