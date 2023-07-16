@@ -149,8 +149,9 @@ class Sscan:
                 _count_ += 1
         else:
             return False
+        return False
 
-    def send(self, cmd: str, retsize: int = 1) -> Tuple[bool, int]:
+    def send(self, cmd: str) -> Tuple[bool, int]:
         seq = [1, 0, 3, 2, 5, 4]
         self.ser.reset_input_buffer()
         self.ser.write(':{}\r'.format(cmd).encode())
@@ -174,7 +175,7 @@ class Sscan:
         else:
             print('some error', val, success)
             return (False, 0)
-
+        return (False, 0)
 
 if __name__ == '__main__':
     s = Sscan('/dev/ttyUSB0', baudrate=9600, timeout=0.02)
