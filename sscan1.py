@@ -1,9 +1,12 @@
+from typing import Tuple
 import serial
-import re
+# import re
 import time
-_start     = "J"
-_stop      = "K"
-_hardstop  = "L"
+
+# _start     = "J"
+# _stop      = "K"
+# _hardstop  = "L"
+
 class Sscan:
     def __init__(self, devname, baudrate, timeout):
         self.dbg = True
@@ -137,13 +140,14 @@ class Sscan:
                             return True
 
                 else:
-                    wrongcharflag = False
+                    wrongcharflag = False # type: ignore
                 _count_ += 1
         else:
             return False
 
 
-    def send(self, cmd, retsize=1):
+    #def send(self, cmd: str, retsize=1):
+    def send(self, cmd: str) -> Tuple[bool, int]:
         seq = [1,0,3,2,5,4]
         self.ser.reset_input_buffer()
         self.ser.write(':{}\r'.format(cmd).encode())
@@ -157,17 +161,21 @@ class Sscan:
                 #print(retchar, type(retchar), "{:X}".format(val))
                 if retchar == b'\r':
                     return True, val
-                    break
 
                 if retchar in b"1234567890ABCDEFabcdef":
                     val |= (int(retchar, 16) << seq[_count_] * 4)
                 else:
-                    wrongcharflag = True
+                    wrongcharflag = True # type: ignore
                 _count_ += 1
-        else:
-            print('some error', val, success)
-            return False, 0
+        #else:
+        #    print('some error', val, success)
+        #    return False, 0
+        print('some error', val, success)
+        return False, 0
 
-
-
-s = Sscan('/dev/ttyUSB0', baudrate=9600, timeout=0.02)
+if __name__ == "__main__":
+    s = Sscan('/dev/ttyUSB0', baudrate=9600, timeout=0.02)
+    def test():
+        s.goto(-360, -90, True)
+        s.goto(+360, +90, True)
+        s.goto(0, 0, True)
