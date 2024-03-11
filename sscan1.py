@@ -193,4 +193,5 @@ if __name__ == "__main__":
     s.goto(desired_azi, desired_elv)
 
     if "set" in cli_args:
-
+        if cli_args["set"] == "0":
+            s.set_pos(0, 0)

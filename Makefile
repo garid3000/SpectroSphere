@@ -1,5 +1,5 @@
 send:
-	rsync -rtvzP . pi@"$$(< .ip_development)":~/Spectrum-Catcher-V3 --exclude='*.img'
+	rsync -rtvzP . pi@"$$(< .ip_development)":~/SpecSphere --exclude='venv/*'
 
 ssh:
 	ssh -t pi@"$$(< .ip_development)" "cd ~/Spectrum-Catcher-V3; bash"
