@@ -70,6 +70,12 @@ if __name__ == "__main__":
 
         np.save(f"{cli_args['out']}", data)
 
+    elif "show_loop" in cli_args:
+        for i in range(int(cli_args["show_loop"])):
+            time.sleep(0.1)
+            accel_x, accel_y, accel_z = bno.acceleration  # pylint:disable=no-member
+            print(f"X:{accel_x:0.3f} Y:{accel_y:0.3f} Z:{accel_z:0.3f} m/s^2")
+
     else:
         accel_x, accel_y, accel_z = bno.acceleration  # pylint:disable=no-member
         print(f"X:{accel_x:0.3f} Y:{accel_y:0.3f} Z:{accel_z:0.3f} m/s^2")
