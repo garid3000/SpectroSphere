@@ -189,8 +189,9 @@ if __name__ == "__main__":
     
     desired_azi = s.get_pos_deg(1) if "azi" not in cli_args else float(cli_args["azi"])
     desired_elv = s.get_pos_deg(2) if "elv" not in cli_args else float(cli_args["elv"])
+    waiting = False if "wait" not in cli_args else True
     
-    s.goto(desired_azi, desired_elv)
+    s.goto(desired_azi, desired_elv, waiting)
 
     if "set" in cli_args:
         if cli_args["set"] == "0":
