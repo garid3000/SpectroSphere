@@ -24,26 +24,23 @@ bno.enable_feature(adafruit_bno08x.BNO_REPORT_RAW_GYROSCOPE)
 bno.enable_feature(adafruit_bno08x.BNO_REPORT_RAW_MAGNETOMETER)
 
 
-data = np.zeros((100, 9))
-
-#while True:
-for i in range(100):
-    time.sleep(0.1)
-
-    accel_x, accel_y, accel_z = bno.acceleration  # pylint:disable=no-member
-    print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (accel_x, accel_y, accel_z), end = '|')
-
-    gyro_x, gyro_y, gyro_z = bno.gyro  # pylint:disable=no-member
-    print("X: %0.6f  Y: %0.6f Z: %0.6f rads/s" % (gyro_x, gyro_y, gyro_z), end='|')
-
-    mag_x, mag_y, mag_z = bno.magnetic  # pylint:disable=no-member
-    print("X: %0.6f  Y: %0.6f Z: %0.6f uT" % (mag_x, mag_y, mag_z), end='|')
-
-
-    #data[i,:] = [accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z,mag_x, mag_y, mag_z   ]
-    if bno.shake:
-        print("SHAKE DETECTED!")
-    print('', end='\r', flush=True)
+# data = np.zeros((100, 9))
+# 
+# for i in range(100):
+#     time.sleep(0.1)
+#     accel_x, accel_y, accel_z = bno.acceleration  # pylint:disable=no-member
+#     #print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (accel_x, accel_y, accel_z), end = '|')
+# 
+#     gyro_x, gyro_y, gyro_z = bno.gyro  # pylint:disable=no-member
+#     #print("X: %0.6f  Y: %0.6f Z: %0.6f rads/s" % (gyro_x, gyro_y, gyro_z), end='|')
+# 
+#     mag_x, mag_y, mag_z = bno.magnetic  # pylint:disable=no-member
+#     #print("X: %0.6f  Y: %0.6f Z: %0.6f uT" % (mag_x, mag_y, mag_z), end='|')
+# 
+#     data[i,:] = [accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z,mag_x, mag_y, mag_z   ]
+#     #if bno.shake:
+#     #    print("SHAKE DETECTED!")
+#     #print('', end='\r', flush=True)
 
 
 
@@ -54,5 +51,25 @@ if __name__ == "__main__":
         if each_arg.count('=') == 1
     }
     
+    
     if "out" in cli_args:
+        data = np.zeros((100, 9))
+
+        for i in range(100):
+            time.sleep(0.1)
+            accel_x, accel_y, accel_z = bno.acceleration  # pylint:disable=no-member
+            #print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (accel_x, accel_y, accel_z), end = '|')
+
+            gyro_x, gyro_y, gyro_z = bno.gyro  # pylint:disable=no-member
+            #print("X: %0.6f  Y: %0.6f Z: %0.6f rads/s" % (gyro_x, gyro_y, gyro_z), end='|')
+
+            mag_x, mag_y, mag_z = bno.magnetic  # pylint:disable=no-member
+            #print("X: %0.6f  Y: %0.6f Z: %0.6f uT" % (mag_x, mag_y, mag_z), end='|')
+
+            data[i,:] = [accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z,mag_x, mag_y, mag_z   ]
+
         np.save(f"{cli_args['out']}", data)
+
+    else:
+        accel_x, accel_y, accel_z = bno.acceleration  # pylint:disable=no-member
+        print(f"X:{accel_x:0.3f} Y:{accel_y:0.3f} Z:{accel_z:0.3f} m/s^2")
