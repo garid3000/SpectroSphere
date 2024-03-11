@@ -79,7 +79,7 @@ cap2 = xVideoCapture("/dev/video2")
 #cap1 = cv2.VideoCapture(2)
 #cap1.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
-dBuf_img0  = np.zeros((4000, 480, 640), dtype=np.uint8)
+dBuf_img0 = np.zeros((4000, 480, 640), dtype=np.uint8)
 dBuf_img1 = np.zeros((4000, 480, 640), dtype=np.uint8)
 dBuf_ori  = np.zeros((4000, 7))
 
@@ -132,7 +132,7 @@ for el in range(elv0, elv1, 10):
     while 1:
         i,j,k,r = 0,0,0,0 #bno.quaternion      # orientation
         curazi = smc.get_pos_deg(1)  # orientation from motors
-        print(count, el, "%.2f" % curazi, time.time()-t0)
+        print(count, el+5, "%.2f" % curazi, time.time()-t0)
         dBuf_img0[count,:,:] = cap0.read()[:, :, 0] #frame[:, 200:400, 0].reshape(200,480)
         dBuf_img1[count,:,:] = cap2.read()[:, :, 0] # frame1[:, 200:400, 0].reshape(200,480)
         dBuf_ori[count,:  ] = [el+5,curazi, i,j,k,r, time.time()-t0]
