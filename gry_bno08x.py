@@ -1,8 +1,4 @@
-
-pi@raspberrypi:~/main_v6_1cam_kagoshima_22feb15$ cat gry_bno08x_acc.py
-# SPDX-FileCopyrightText: 2020 Bryan Siepert, written for Adafruit Industries
-#
-# SPDX-License-Identifier: MIT
+import sys
 import time
 import board
 import busio
@@ -48,15 +44,15 @@ for i in range(100):
     if bno.shake:
         print("SHAKE DETECTED!")
     print('', end='\r', flush=True)
-print()
-if input('save? y/n') == 'y':
-    np.save('startof/{}'.format(input('name:')), data)
-    print('save')
-else:
-    print('no save')
-pi@raspberrypi:~/main_v6_1cam_kagoshima_22feb15$
 
 
 
-
-
+if __name__ == "__main__":
+    cli_args = {
+        each_arg.split('=')[0]:each_arg.split('=')[1]
+        for each_arg in sys.argv[1:]
+        if each_arg.count('=') == 1
+    }
+    
+    if "out" in cli_args:
+        np.save(f"{cli_args['out']}", data)
