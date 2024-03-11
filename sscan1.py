@@ -1,3 +1,4 @@
+import sys
 from typing import Tuple
 import serial
 # import re
@@ -174,8 +175,22 @@ class Sscan:
         return False, 0
 
 if __name__ == "__main__":
+    cli_args = {
+        each_arg.split('=')[0]:each_arg.split('=')[1]
+        for each_arg in sys.argv[1:]
+        if each_arg.count('=') == 1
+    }
+
     s = Sscan('/dev/ttyUSB0', baudrate=9600, timeout=0.02)
     def test():
         s.goto(-360, -90, True)
         s.goto(+360, +90, True)
         s.goto(0, 0, True)
+    
+    desired_azi = s.get_pos_deg(1) if "azi" not in cli_args else float(cli_args["azi"])
+    desired_elv = s.get_pos_deg(2) if "elv" not in cli_args else float(cli_args["elv"])
+    
+    s.goto(desired_azi, desired_elv)
+
+    if "set" in cli_args:
+
