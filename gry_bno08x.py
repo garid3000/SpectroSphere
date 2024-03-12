@@ -78,4 +78,4 @@ if __name__ == "__main__":
 
     else:
         accel_x, accel_y, accel_z = bno.acceleration  # pylint:disable=no-member
-        print(f"X:{accel_x:0.3f} Y:{accel_y:0.3f} Z:{accel_z:0.3f} m/s^2")
+        print(f"X:{accel_x:0.3f}\nY:{accel_y:0.3f}\nZ:{accel_z:0.3f} m/s^2")
