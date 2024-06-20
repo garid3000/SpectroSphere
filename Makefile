@@ -22,7 +22,6 @@ ssh-kill-pyhton3:
 scp-rm:
 	scp -r pi@"$$(< .ip_development)":Data/ /tmp/
 	ssh pi@"$$(< .ip_development)" "rm -rfv ~/Data;"
-	
 
 run: 
 	ssh pi@"$$(< .ip_development)" -t python3 /home/pi/SpectroSpehere/py_tab1_handheld.py
@@ -38,11 +37,4 @@ ip_set:
 
 ip_get:
 	echo "current IP set is:" "$$(< .ip_development)";
-
-
-venv_reinstall:
-	rm -rfv "./venv"
-	virtualenv "venv"
-	# source "./venv/bin/activate"
-	# which python3
 
