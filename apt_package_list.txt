@@ -1,8 +1,0 @@
-virtualenv
-libgl1-mesa-glx
-
-git
-tmux
-
-vim
-minicom
