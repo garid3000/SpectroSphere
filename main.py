@@ -4,7 +4,6 @@ import cv2
 
 import board
 import busio
-#import synscan
 from sscan1 import Sscan
 
 
