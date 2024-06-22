@@ -42,16 +42,15 @@ if __name__ == "__main__":
             print(f"X:{acc_x:0.3f} Y:{acc_y:0.3f} Z:{acc_z:0.3f} m/s^2")
 
     else:
-        while True:
-            acc_x, acc_y, acc_z = bno.acceleration  # pylint:disable=no-member
-            print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (acc_x, acc_y, acc_z), end="\t")
+        acc_x, acc_y, acc_z = bno.acceleration  # pylint:disable=no-member
+        print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (acc_x, acc_y, acc_z), end="\t")
 
-            gyr_x, gyr_y, gyr_z = bno.gyro  # pylint:disable=no-member
-            print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (gyr_x, gyr_y, gyr_z), end="\t")
+        gyr_x, gyr_y, gyr_z = bno.gyro  # pylint:disable=no-member
+        print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (gyr_x, gyr_y, gyr_z), end="\t")
 
-            mag_x, mag_y, mag_z = bno.magnetic  # pylint:disable=no-member
-            print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (mag_x, mag_y, mag_z), end="\t")
-            quat_i, quat_j, quat_k, quat_real = bno.quaternion
-            print(quat_i, quat_j, quat_k, quat_real)
+        mag_x, mag_y, mag_z = bno.magnetic  # pylint:disable=no-member
+        print("X: %0.6f  Y: %0.6f Z: %0.6f  m/s^2" % (mag_x, mag_y, mag_z), end="\t")
+        quat_i, quat_j, quat_k, quat_real = bno.quaternion
+        print(quat_i, quat_j, quat_k, quat_real)
 
-            time.sleep(0.05)
+        time.sleep(0.05)

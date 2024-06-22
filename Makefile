@@ -2,7 +2,7 @@ hello:
 	echo "Hello, World"
 
 send:
-	rsync --exclude="venv" --exclude=".mypy_cache" -rtvzP . pi@"$$(< .ip_development)":~/SpectroSpehere --exclude='*.img'
+	rsync --exclude="venv" --exclude=".mypy_cache" -rtvzP . pi@"$$(< .ip_development)":~/SpectroSphere --exclude='*.img'
 
 ssh:
 	ssh -t pi@"$$(< .ip_development)" "cd ~/SpectroSpehere; bash"
@@ -23,10 +23,10 @@ scp-rm:
 	scp -r pi@"$$(< .ip_development)":Data/ /tmp/
 	ssh pi@"$$(< .ip_development)" "rm -rfv ~/Data;"
 
-run: 
+run:
 	ssh pi@"$$(< .ip_development)" -t python3 /home/pi/SpectroSpehere/py_tab1_handheld.py
 
-reboot: 
+reboot:
 	ssh pi@"$$(< .ip_development)" -t sudo reboot
 
 ip_search:

@@ -1,12 +1,15 @@
-import os, time, sys # , datetime
+import os
+import time
+import sys #datetime
 import numpy as np
 import cv2
 
 #import board
 #import busio
 #import synscan
-from sscan1 import Sscan
-import cv2, queue, threading, time, numpy as np
+from custom_libs.sscan1 import Sscan
+import queue
+import threading
 
 
 # ----------------------------------------------------------
@@ -24,7 +27,7 @@ class xVideoCapture:
             ret, frame = self.cap.read()
             if not ret:
                 break
-            if not self.q.empty(): 
+            if not self.q.empty():
                 try:
                     self.q.get_nowait()   # discard previous (unprocessed) frame
                 except queue.Empty:
