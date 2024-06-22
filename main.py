@@ -6,7 +6,7 @@ import cv2
 # import board
 # import busio
 # from sscan1 import Sscan  # import synscan
-from custom_libs.synscan import Sscan
+from custom_libs.sscan1 import Sscan
 
 
 # from adafruit_bno08x import (
@@ -24,9 +24,8 @@ from custom_libs.synscan import Sscan
 # bno.enable_feature(BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR)
 
 
-# smc = synscan.motors()
 smc = Sscan('/dev/ttyUSB0', 9600, 0.2)
-smc.goto(0, 0, True)  # wait unitl the goto 0 0
+smc.goto(0, 0, wait=True)
 
 
 cap = cv2.VideoCapture()
