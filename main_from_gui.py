@@ -27,7 +27,7 @@ from adafruit_bno08x import (
 
 # ----------------------------------------------------------
 class xVideoCapture:
-    def __init__(self, name: str, fourcc: str = "MJPEG"):
+    def __init__(self, name: str, fourcc: str = "MJPEG", autoexpo=3):
         self.cap = cv2.VideoCapture()  # type: ignore
         self.cap.open(name, apiPreference=cv2.CAP_V4L2)
         if fourcc == "YUYV":
@@ -35,8 +35,8 @@ class xVideoCapture:
         else:
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        self.cap.set(cv2.CAP_PROP_APERTURE, 1)
-        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1)
+        #self.cap.set(cv2.CAP_PROP_APERTURE, 1)
+        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, autoexpo)
         self.q = queue.Queue()
         t = threading.Thread(target=self._reader)
         t.daemon = True
@@ -110,8 +110,8 @@ smc = Sscan("/dev/ttyUSB0", 9600, 0.2)
 smc.goto(0, 0, True)  # wait unitl the goto 0 0
 
 
-cap0 = xVideoCapture("/dev/video0", fourcc="YUYV")
-cap2 = xVideoCapture("/dev/video2", fourcc="MJPG")
+cap0 = xVideoCapture("/dev/video0", fourcc="MJPG", autoexpo=1)
+cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3)
 snsr = xOriSensor()
 
 
