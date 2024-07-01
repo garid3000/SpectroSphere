@@ -27,7 +27,7 @@ from adafruit_bno08x import (
 
 # ----------------------------------------------------------
 class xVideoCapture:
-    def __init__(self, name: str, fourcc: str = "MJPEG", autoexpo=3):
+    def __init__(self, name: str, fourcc: str = "MJPEG", autoexpo=3, fps=15, frame_w=640, frame_h=480):
         self.cap = cv2.VideoCapture()  # type: ignore
         self.cap.open(name, apiPreference=cv2.CAP_V4L2)
         if fourcc == "YUYV":
@@ -37,6 +37,11 @@ class xVideoCapture:
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         #self.cap.set(cv2.CAP_PROP_APERTURE, 1)
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, autoexpo)
+        self.cap.set(cv2.CAP_PROP_FPS, fps)
+
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_w)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_h)
+
         self.q = queue.Queue()
         t = threading.Thread(target=self._reader)
         t.daemon = True
@@ -110,13 +115,15 @@ smc = Sscan("/dev/ttyUSB0", 9600, 0.2)
 smc.goto(0, 0, True)  # wait unitl the goto 0 0
 
 
-cap0 = xVideoCapture("/dev/video0", fourcc="MJPG", autoexpo=1)
-cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3)
+cap0 = xVideoCapture("/dev/video0", fourcc="YUYV", autoexpo=1)
+cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=320, frame_h=240)
 snsr = xOriSensor()
 
 
-dBuf_img0 = np.zeros((4000, 480, 640), dtype=np.uint8)
-dBuf_img1 = np.zeros((4000, 480, 640), dtype=np.uint8)
+#dBuf_img0 = np.zeros((4000, 480, 640), dtype=np.uint8)
+dBuf_img0 = np.zeros((4000, 480, 200), dtype=np.uint8)
+#dBuf_img1 = np.zeros((4000, 480, 640), dtype=np.uint8)
+dBuf_img1 = np.zeros((4000, 240, 320), dtype=np.uint8)
 dBuf_ori = np.zeros((4000, 7))
 
 
@@ -145,8 +152,8 @@ for el in range(elv0, elv1, 10):
         frame = cap0.read()  # spectrum
         curazi = smc.get_pos_deg(1)  # orientation from motors
         print(count, el, "%.2f" % curazi, time.time() - t0, i, j, k, r)
-        dBuf_img0[count, :, :] = cap0.read()[:, :, 0]  # frame[:, :, 0]
-        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]  # frame[:, :, 0] #dBuf_img1[count,:,:] = frame1[:, 200:400, 0].reshape(200,480)
+        dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, :, 0]
+        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]        # frame[:, :, 0] #dBuf_img1[count,:,:] = frame1[:, 200:400, 0].reshape(200,480)
         dBuf_ori[count, :] = [el, curazi, i, j, k, r, time.time() - t0]
         count += 1
 
@@ -175,7 +182,7 @@ for el in range(elv0, elv1, 10):
         i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
         curazi = smc.get_pos_deg(1)  # orientation from motors
         print(count, el + 5, "%.2f" % curazi, time.time() - t0)
-        dBuf_img0[count, :, :] = cap0.read()[:, :, 0]  # frame[:, 200:400, 0].reshape(200,480)
+        dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, 200:400, 0].reshape(200,480)
         dBuf_img1[count, :, :] = cap2.read()[:, :, 0]  # frame1[:, 200:400, 0].reshape(200,480)
         dBuf_ori[count, :] = [el + 5, curazi, i, j, k, r, time.time() - t0]
         count += 1
