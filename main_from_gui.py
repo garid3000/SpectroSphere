@@ -148,7 +148,9 @@ for el in range(elv0, elv1, 10):
     smc.goto(azi1, el, False)
 
     while 1:
+        i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
         i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
+
         frame = cap0.read()  # spectrum
         curazi = smc.get_pos_deg(1)  # orientation from motors
         print(count, el, "%.2f" % curazi, time.time() - t0, i, j, k, r)
@@ -180,6 +182,7 @@ for el in range(elv0, elv1, 10):
     smc.goto(azi0, el + 5, False)
     while 1:
         i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
+        i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
         curazi = smc.get_pos_deg(1)  # orientation from motors
         print(count, el + 5, "%.2f" % curazi, time.time() - t0)
         dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, 200:400, 0].reshape(200,480)
