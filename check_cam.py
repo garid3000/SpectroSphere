@@ -8,6 +8,8 @@ if r:
 cap0.release()
 
 cap2 = cv2.VideoCapture(2)
+frame_0 = np.zeros(f.shape, f.dtype)
 r, f = cap2.read()
 if r:
-    np.save("/tmp/cam2.npy", f)
+    frame_0[:f.shape[0], :f.shape[1], :] = f[:, :, :]
+    np.save("/tmp/cam2.npy", frame_0)
