@@ -152,9 +152,17 @@ for el in range(elv0, elv1, 10):
 
         if abs(curazi - azi1) < 0.2:
             break
-    np.save("{}/img_el0_{:3.1f}".format(ddir, el), dBuf_img0[:count, :, :])
-    np.save("{}/img_el2_{:3.1f}".format(ddir, el), dBuf_img1[:count, :, :])
-    np.save("{}/ori_el__{:3.1f}".format(ddir, el), dBuf_ori[:count, :])
+    # np.save("{}/img_el0_{:3.1f}".format(ddir, el), dBuf_img0[:count, :, :])
+    # np.save("{}/img_el2_{:3.1f}".format(ddir, el), dBuf_img1[:count, :, :])
+    # np.save("{}/ori_el__{:3.1f}".format(ddir, el), dBuf_ori[:count, :])
+    print('cpmressing to save', "{}/scan_data_{:3.1f}".format(ddir, el))
+    np.savez_compressed(
+        "{}/scan_data_{:3.1f}".format(ddir, el),
+        spectr=dBuf_img0[:count, :, :],
+        webcam=dBuf_img1[:count, :, :],
+        orient=dBuf_ori[:count, :],
+    )
+
 
     smc.goto(azi1, el + 5, True)
     dBuf_img0[:, :, :] = 0
@@ -175,6 +183,15 @@ for el in range(elv0, elv1, 10):
         if abs(curazi - azi0) < 0.2:
             break
 
-    np.save("{}/img_el0_{:3.1f}".format(ddir, el + 5), dBuf_img0[:count, :, :])
-    np.save("{}/img_el2_{:3.1f}".format(ddir, el + 5), dBuf_img1[:count, :, :])
-    np.save("{}/ori_el__{:3.1f}".format(ddir, el + 5), dBuf_ori[:count, :])
+
+    # np.save("{}/img_el0_{:3.1f}".format(ddir, el + 5), dBuf_img0[:count, :, :])
+    # np.save("{}/img_el2_{:3.1f}".format(ddir, el + 5), dBuf_img1[:count, :, :])
+    # np.save("{}/ori_el__{:3.1f}".format(ddir, el + 5), dBuf_ori[:count, :])
+
+    np.savez_compressed(
+        "{}/scan_datA_{:3.1f}".format(ddir, el + 5),
+        spectr=dBuf_img0[:count, :, :],
+        webcam=dBuf_img1[:count, :, :],
+        orient=dBuf_ori[:count, :],
+    )
+    print('cpmressing to save', "{}/scan_datA_{:3.1f}".format(ddir, el + 5))
