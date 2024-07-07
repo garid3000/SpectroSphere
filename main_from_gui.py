@@ -148,20 +148,30 @@ for el in range(elv0, elv1, 10):
     smc.goto(azi1, el, False)
 
     while 1:
-        i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
+        i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
+        #i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
+
         frame = cap0.read()  # spectrum
         curazi = smc.get_pos_deg(1)  # orientation from motors
         print(count, el, "%.2f" % curazi, time.time() - t0, i, j, k, r)
-        dBuf_img0[count, :, :] = cap0.read()[:, :, 0]  # frame[:, :, 0]
-        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]  # frame[:, :, 0] #dBuf_img1[count,:,:] = frame1[:, 200:400, 0].reshape(200,480)
+        dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, :, 0]
+        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]        # frame[:, :, 0] #dBuf_img1[count,:,:] = frame1[:, 200:400, 0].reshape(200,480)
         dBuf_ori[count, :] = [el, curazi, i, j, k, r, time.time() - t0]
         count += 1
 
         if abs(curazi - azi1) < 0.2:
             break
-    np.save("{}/img_el0_{:3.1f}".format(ddir, el), dBuf_img0[:count, :, :])
-    np.save("{}/img_el2_{:3.1f}".format(ddir, el), dBuf_img1[:count, :, :])
-    np.save("{}/ori_el__{:3.1f}".format(ddir, el), dBuf_ori[:count, :])
+    # np.save("{}/img_el0_{:3.1f}".format(ddir, el), dBuf_img0[:count, :, :])
+    # np.save("{}/img_el2_{:3.1f}".format(ddir, el), dBuf_img1[:count, :, :])
+    # np.save("{}/ori_el__{:3.1f}".format(ddir, el), dBuf_ori[:count, :])
+    print('cpmressing to save', "{}/scan_data_{:3.1f}".format(ddir, el))
+    np.savez_compressed(
+        "{}/scan_data_{:3.1f}".format(ddir, el),
+        spectr=dBuf_img0[:count, :, :],
+        webcam=dBuf_img1[:count, :, :],
+        orient=dBuf_ori[:count, :],
+    )
+
 
     smc.goto(azi1, el + 5, True)
     dBuf_img0[:, :, :] = 0
@@ -172,9 +182,10 @@ for el in range(elv0, elv1, 10):
     smc.goto(azi0, el + 5, False)
     while 1:
         i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
+        #i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
         curazi = smc.get_pos_deg(1)  # orientation from motors
         print(count, el + 5, "%.2f" % curazi, time.time() - t0)
-        dBuf_img0[count, :, :] = cap0.read()[:, :, 0]  # frame[:, 200:400, 0].reshape(200,480)
+        dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, 200:400, 0].reshape(200,480)
         dBuf_img1[count, :, :] = cap2.read()[:, :, 0]  # frame1[:, 200:400, 0].reshape(200,480)
         dBuf_ori[count, :] = [el + 5, curazi, i, j, k, r, time.time() - t0]
         count += 1
@@ -182,6 +193,15 @@ for el in range(elv0, elv1, 10):
         if abs(curazi - azi0) < 0.2:
             break
 
-    np.save("{}/img_el0_{:3.1f}".format(ddir, el + 5), dBuf_img0[:count, :, :])
-    np.save("{}/img_el2_{:3.1f}".format(ddir, el + 5), dBuf_img1[:count, :, :])
-    np.save("{}/ori_el__{:3.1f}".format(ddir, el + 5), dBuf_ori[:count, :])
+
+    # np.save("{}/img_el0_{:3.1f}".format(ddir, el + 5), dBuf_img0[:count, :, :])
+    # np.save("{}/img_el2_{:3.1f}".format(ddir, el + 5), dBuf_img1[:count, :, :])
+    # np.save("{}/ori_el__{:3.1f}".format(ddir, el + 5), dBuf_ori[:count, :])
+
+    np.savez_compressed(
+        "{}/scan_datA_{:3.1f}".format(ddir, el + 5),
+        spectr=dBuf_img0[:count, :, :],
+        webcam=dBuf_img1[:count, :, :],
+        orient=dBuf_ori[:count, :],
+    )
+    print('cpmressing to save', "{}/scan_datA_{:3.1f}".format(ddir, el + 5))
