@@ -1,143 +1,148 @@
+
 import os
+import time
 import sys
-import time  # datetime
+from datetime import datetime
 import numpy as np
 import cv2
 
-import board
-import busio
-# import synscan
-# from sscan1 import Sscan
+from custom_libs.sscan1 import Sscan
+import queue
+import threading
+
+# ----------------------------------------------------------
+class xVideoCapture:
+    def __init__(self, name: str, fourcc: str = "MJPEG", autoexpo=3, fps=15, frame_w=640, frame_h=480):
+        self.cap = cv2.VideoCapture()  # type: ignore
+        self.cap.open(name, apiPreference=cv2.CAP_V4L2)
+        if fourcc == "YUYV":
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("Y", "U", "Y", "V"))
+        else:
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        #self.cap.set(cv2.CAP_PROP_APERTURE, 1)
+        self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, autoexpo)
+        self.cap.set(cv2.CAP_PROP_FPS, fps)
+
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, frame_w)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame_h)
+
+        self.q = queue.Queue()
+        t = threading.Thread(target=self._reader)
+        t.daemon = True
+        t.start()
+
+    # read frames as soon as they are available, keeping only most recent one
+    def _reader(self):
+        while True:
+            ret, frame = self.cap.read()
+            if not ret:
+                break
+            if not self.q.empty():
+                try:
+                    self.q.get_nowait()  # discard previous (unprocessed) frame
+                except queue.Empty:
+                    pass
+            self.q.put(frame)
+
+    def read(self):
+        return self.q.get()
 
 
-from adafruit_bno08x import (
-            BNO_REPORT_ACCELEROMETER,
-            # BNO_REPORT_GYROSCOPE,
-            BNO_REPORT_MAGNETOMETER,
-            BNO_REPORT_ROTATION_VECTOR,
-            # BNO_REPORT_GEOMAGNETIC_ROTATION_VECTOR,
+# ----------------------------------------------------------
+cli_args = {each_arg.split("=")[0]: each_arg.split("=")[1] for each_arg in sys.argv[1:] if each_arg.count("=") == 1}
+
+# elv0 = int(cli_args["elv0"])
+# elv1 = int(cli_args["elv1"])
+# azi0 = int(cli_args["azi0"])
+# azi1 = int(cli_args["azi1"])
+
+# ---------------------------------------------------------
+
+cap0 = xVideoCapture("/dev/video0", fourcc="YUYV", fps=30, autoexpo=1)
+cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=320, frame_h=240)
+
+
+dBuf_img0 = np.zeros((4000, 480, 200), dtype=np.uint8)
+dBuf_img1 = np.zeros((4000, 240, 320), dtype=np.uint8)
+dBuf_ori = np.zeros((4000, 7))
+
+
+ddir = os.path.join(
+    "/home/pi/",
+    datetime.now().strftime("data_%Y%m%d_%H%M%S_") + cli_args["ddir"],
 )
-from adafruit_bno08x.i2c import BNO08X_I2C
+os.makedirs(ddir, exist_ok=True)
 
-i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
-bno = BNO08X_I2C(i2c)
-bno.enable_feature(BNO_REPORT_ROTATION_VECTOR)
-bno.enable_feature(BNO_REPORT_MAGNETOMETER)
-bno.enable_feature(BNO_REPORT_ACCELEROMETER)
-
-# smc = synscan.motors()
-# smc = Sscan('/dev/ttyUSB0', 9600, 0.2)
-# smc.goto(0,0, True) # wait unitl the goto 0 0
-
-cap = cv2.VideoCapture()
-cap.open(0)
-cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-ddir = input('data dir: ')
-# ddir = "/mnt/storage/{}".format(
-#    # '{0:%Y-%m-%d-%H}h'.format(datetime.datetime.now()))
-if os.path.isdir(ddir):
-    pass
-    # Previous following peice was to manual
-    if 'y' != input('dir is already exists, continue? y/n'):
-        sys.exit()
-else:
-    os.mkdir(ddir)
 t0 = time.time()
 ct0 = time.ctime()
-os.system("echo \"{}\" >> {}/0000.time".format(ct0, ddir))
+os.system('echo "{}" >> {}/0000.time'.format(ct0, ddir))
 
-
-# 15000
-dBuf_img = np.zeros((20000, 260, 160), dtype=np.uint8)
-dBuf_ori = np.zeros((20000, 12))
-
-# exposure
-expovals = [1, 2, 5, 10, 20, 39, 78, 156, 312, 625, 1250, 2500]
-expo_ind = 8
-
-
-def exposure(inc) -> None:
-    global expo_ind
-    if inc == 0:
-        return
-    expo_ind += inc
-    if expo_ind > 11:
-        expo_ind = 11
-        return
-    if expo_ind < 0:
-        expo_ind = 0
-        return
-    os.system(
-        f'v4l2-ctl -d0 -c exposure_absolute={expovals[expo_ind]}')
-    print(
-        f'v4l2-ctl -d0 -c exposure_absolute={expovals[expo_ind]}')
-
-    for _ in range(10):
-        cap.grab()       # for syncing
-
-
-# while 1: #this is the looping.
-for epoch in range(100):
-    dBuf_img[:, :, :] = 0
+#######################################################################################################################
+for el in range(elv0, elv1, 10):
+    smc.goto(azi0, el, True)
+    dBuf_img0[:, :, :] = 0
+    dBuf_img1[:, :, :] = 0
     dBuf_ori[:, :] = 0
     count = 0
-    for i in range(10):
-        cap.grab()       # for syncing
-    try:
-        while count < 20000:
-            bno_qua = bno.quaternion
-            bno_acc = bno.acceleration
-            bno_mag = bno.magnetic
+    time.sleep(0.5)
+    smc.goto(azi1, el, False)
 
-            ret, frame = cap.read()
+    while 1:
+        i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
+        #i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
 
-            if ret:
-                dBuf_img[count, :, :] = frame[55:315, 235:395, 0]  # 260 x 160
+        frame = cap0.read()  # spectrum
+        curazi = smc.get_pos_deg(1)  # orientation from motors
+        print(count, el, "%.2f" % curazi, time.time() - t0, i, j, k, r)
+        dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, :, 0]
+        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]        # frame[:, :, 0] #dBuf_img1[count,:,:] = frame1[:, 200:400, 0].reshape(200,480)
+        dBuf_ori[count, :] = [el, curazi, i, j, k, r, time.time() - t0]
+        count += 1
 
-                if bno_qua is not None:
-                    dBuf_ori[count, 0:4] = bno_qua
-                if bno_acc is not None:
-                    dBuf_ori[count, 4:7] = bno_acc
-                if bno_mag is not None:
-                    dBuf_ori[count, 7:10] = bno_mag
+        if abs(curazi - azi1) < 0.2:
+            break
+    # np.save("{}/img_el0_{:3.1f}".format(ddir, el), dBuf_img0[:count, :, :])
+    # np.save("{}/img_el2_{:3.1f}".format(ddir, el), dBuf_img1[:count, :, :])
+    # np.save("{}/ori_el__{:3.1f}".format(ddir, el), dBuf_ori[:count, :])
+    print('cpmressing to save', "{}/scan_data_{:3.1f}".format(ddir, el))
+    np.savez_compressed(
+        "{}/scan_data_{:3.1f}".format(ddir, el),
+        spectr=dBuf_img0[:count, :, :],
+        webcam=dBuf_img1[:count, :, :],
+        orient=dBuf_ori[:count, :],
+    )
 
-                dBuf_ori[count, 10] = time.time() - t0
-                dBuf_ori[count, 11] = expo_ind
-                # dBuf_ori[count, :] = [i, j, k, r,
-                #                       acc_x, acc_y, acc_z,
-                #                       mag_x, mag_y, mag_z,
-                #                       time.time()-t0, expo_ind]
-                count += 1
-            if count % 50 == 0:
-                print(f"| {count=:6d} | {dBuf_ori[count, :]}")
 
-            if (count % 10 == 0) and (count > 0):   # pass #check exposure here
-                m_gray = np.max(np.mean(
-                    dBuf_img[count-10:count, :, 110:140], axis=2), axis=1)
-                m_targ = np.max(np.mean(
-                    dBuf_img[count-10:count, :, 10:75],   axis=2), axis=1)
-                m_grtr = np.maximum(m_gray, m_targ)
+    smc.goto(azi1, el + 5, True)
+    dBuf_img0[:, :, :] = 0
+    dBuf_img1[:, :, :] = 0
+    dBuf_ori[:, :] = 0
+    count = 0
+    time.sleep(0.5)
+    smc.goto(azi0, el + 5, False)
+    while 1:
+        i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
+        #i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
+        curazi = smc.get_pos_deg(1)  # orientation from motors
+        print(count, el + 5, "%.2f" % curazi, time.time() - t0)
+        dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, 200:400, 0].reshape(200,480)
+        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]  # frame1[:, 200:400, 0].reshape(200,480)
+        dBuf_ori[count, :] = [el + 5, curazi, i, j, k, r, time.time() - t0]
+        count += 1
 
-                inc_expo = 0
-                if np.sum(m_grtr > 230) > 7:
-                    inc_expo -= 1
-                if np.sum(m_grtr < 90) > 7:
-                    inc_expo += 1
+        if abs(curazi - azi0) < 0.2:
+            break
 
-                print(m_grtr.astype(np.uint8))
-                exposure(inc_expo)
 
-    except KeyboardInterrupt:
-        print("Saving measurement wait for a while.", count)
-        np.save(
-            f'{ddir}/img_el0_{epoch:02d}_{count:04d}',
-            dBuf_img[:count, :, :])
-        np.save(
-            f'{ddir}/ori_el__{epoch:02d}_{count:04d}',
-            dBuf_ori[:count, :])
-        print("Finished")
-        sys.exit()
+    # np.save("{}/img_el0_{:3.1f}".format(ddir, el + 5), dBuf_img0[:count, :, :])
+    # np.save("{}/img_el2_{:3.1f}".format(ddir, el + 5), dBuf_img1[:count, :, :])
+    # np.save("{}/ori_el__{:3.1f}".format(ddir, el + 5), dBuf_ori[:count, :])
 
-    np.save('{}/img_el0_{:02d}'.format(ddir, epoch), dBuf_img)
-    np.save('{}/ori_el__{:02d}'.format(ddir, epoch), dBuf_ori)
+    np.savez_compressed(
+        "{}/scan_datA_{:3.1f}".format(ddir, el + 5),
+        spectr=dBuf_img0[:count, :, :],
+        webcam=dBuf_img1[:count, :, :],
+        orient=dBuf_ori[:count, :],
+    )
+    print('cpmressing to save', "{}/scan_datA_{:3.1f}".format(ddir, el + 5))
