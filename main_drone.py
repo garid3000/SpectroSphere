@@ -52,21 +52,13 @@ class xVideoCapture:
 # ----------------------------------------------------------
 cli_args = {each_arg.split("=")[0]: each_arg.split("=")[1] for each_arg in sys.argv[1:] if each_arg.count("=") == 1}
 
-# elv0 = int(cli_args["elv0"])
-# elv1 = int(cli_args["elv1"])
-# azi0 = int(cli_args["azi0"])
-# azi1 = int(cli_args["azi1"])
+duration = int(cli_args["time"])
+batchsize = int(cli_args["batch"]) if "batch" in cli_args else 40000
 
 # ---------------------------------------------------------
 
 cap0 = xVideoCapture("/dev/video0", fourcc="YUYV", fps=30, autoexpo=1)
 cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=320, frame_h=240)
-
-
-dBuf_img0 = np.zeros((4000, 480, 200), dtype=np.uint8)
-dBuf_img1 = np.zeros((4000, 240, 320), dtype=np.uint8)
-dBuf_ori = np.zeros((4000, 7))
-
 
 ddir = os.path.join(
     "/home/pi/",
@@ -74,75 +66,23 @@ ddir = os.path.join(
 )
 os.makedirs(ddir, exist_ok=True)
 
+dBuf_img0 = np.memmap(os.path.join(ddir, "spectr.mmmp.npy"), mode="r+", shape=(batchsize, 480, 200), dtype=np.uint8)
+dBuf_img1 = np.memmap(os.path.join(ddir, "webcam.mmmp.npy"), mode="r+", shape=(batchsize, 240, 320), dtype=np.uint8)
+dBuf_ori  = np.memmap(os.path.join(ddir, "orient.mmmp.npy"), mode="r+", shape=(batchsize, 7))
+
+dBuf_img0[:] = 0
+dBuf_img1[:] = 0
+dBuf_ori[:] = 0
+
 t0 = time.time()
 ct0 = time.ctime()
 os.system('echo "{}" >> {}/0000.time'.format(ct0, ddir))
 
 #######################################################################################################################
-for el in range(elv0, elv1, 10):
-    smc.goto(azi0, el, True)
-    dBuf_img0[:, :, :] = 0
-    dBuf_img1[:, :, :] = 0
-    dBuf_ori[:, :] = 0
-    count = 0
-    time.sleep(0.5)
-    smc.goto(azi1, el, False)
-
-    while 1:
-        i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
-        #i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
-
-        frame = cap0.read()  # spectrum
-        curazi = smc.get_pos_deg(1)  # orientation from motors
-        print(count, el, "%.2f" % curazi, time.time() - t0, i, j, k, r)
-        dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, :, 0]
-        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]        # frame[:, :, 0] #dBuf_img1[count,:,:] = frame1[:, 200:400, 0].reshape(200,480)
-        dBuf_ori[count, :] = [el, curazi, i, j, k, r, time.time() - t0]
-        count += 1
-
-        if abs(curazi - azi1) < 0.2:
-            break
-    # np.save("{}/img_el0_{:3.1f}".format(ddir, el), dBuf_img0[:count, :, :])
-    # np.save("{}/img_el2_{:3.1f}".format(ddir, el), dBuf_img1[:count, :, :])
-    # np.save("{}/ori_el__{:3.1f}".format(ddir, el), dBuf_ori[:count, :])
-    print('cpmressing to save', "{}/scan_data_{:3.1f}".format(ddir, el))
-    np.savez_compressed(
-        "{}/scan_data_{:3.1f}".format(ddir, el),
-        spectr=dBuf_img0[:count, :, :],
-        webcam=dBuf_img1[:count, :, :],
-        orient=dBuf_ori[:count, :],
-    )
-
-
-    smc.goto(azi1, el + 5, True)
-    dBuf_img0[:, :, :] = 0
-    dBuf_img1[:, :, :] = 0
-    dBuf_ori[:, :] = 0
-    count = 0
-    time.sleep(0.5)
-    smc.goto(azi0, el + 5, False)
-    while 1:
-        i, j, k, r = 0, 0, 0, 0  # bno.quaternion      # orientation
-        #i, j, k, r = snsr.read() #0, 0, 0, 0  # bno.quaternion      # orientation
-        curazi = smc.get_pos_deg(1)  # orientation from motors
-        print(count, el + 5, "%.2f" % curazi, time.time() - t0)
-        dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]  # frame[:, 200:400, 0].reshape(200,480)
-        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]  # frame1[:, 200:400, 0].reshape(200,480)
-        dBuf_ori[count, :] = [el + 5, curazi, i, j, k, r, time.time() - t0]
-        count += 1
-
-        if abs(curazi - azi0) < 0.2:
-            break
-
-
-    # np.save("{}/img_el0_{:3.1f}".format(ddir, el + 5), dBuf_img0[:count, :, :])
-    # np.save("{}/img_el2_{:3.1f}".format(ddir, el + 5), dBuf_img1[:count, :, :])
-    # np.save("{}/ori_el__{:3.1f}".format(ddir, el + 5), dBuf_ori[:count, :])
-
-    np.savez_compressed(
-        "{}/scan_datA_{:3.1f}".format(ddir, el + 5),
-        spectr=dBuf_img0[:count, :, :],
-        webcam=dBuf_img1[:count, :, :],
-        orient=dBuf_ori[:count, :],
-    )
-    print('cpmressing to save', "{}/scan_datA_{:3.1f}".format(ddir, el + 5))
+count = 0
+while (time.time() - t0 < duration):
+    frame = cap0.read()
+    dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]
+    dBuf_img1[count, :, :] = cap2.read()[:, :, 0]      
+    dBuf_ori[count, -1] = time.time() - t0
+    count += 1
