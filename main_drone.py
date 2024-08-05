@@ -70,8 +70,8 @@ dBuf_img0 = np.memmap(os.path.join(ddir, "spectr.mmmp.npy"), mode="w+", shape=(b
 dBuf_img1 = np.memmap(os.path.join(ddir, "webcam.mmmp.npy"), mode="w+", shape=(batchsize, 240, 320), dtype=np.uint8)
 dBuf_ori  = np.memmap(os.path.join(ddir, "orient.mmmp.npy"), mode="w+", shape=(batchsize, 7))
 
-dBuf_img0[:] = 0
-dBuf_img1[:] = 0
+#dBuf_img0[:] = 0
+#dBuf_img1[:] = 0
 dBuf_ori[:] = 0
 
 t0 = time.time()
