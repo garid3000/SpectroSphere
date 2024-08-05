@@ -85,5 +85,5 @@ while (time.time() - t0 < duration):
     dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]
     dBuf_img1[count, :, :] = cap2.read()[:, :, 0]      
     dBuf_ori[count, -1] = time.time() - t0
-    print(count, time.time() - t0, "of", duration)
+    print(count, f"{time.time() - t0:3.2f}s", "of", duration)
     count += 1
