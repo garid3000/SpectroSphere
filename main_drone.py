@@ -110,7 +110,6 @@ def main() -> int:
     #######################################################################################################################
     count = 0
     while (time.time() - t0 < cli_duration_in_s):
-        frame = cap0.read()
         dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]
         dBuf_img1[count, :, :] = cap2.read()[:, :, 0]      
         dBuf_ori[count, -1] = time.time() - t0
