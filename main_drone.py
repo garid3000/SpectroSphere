@@ -12,7 +12,7 @@ import logging
 # ================ setting the cli arugments =================================================
 cli_args = {each_arg.split("=")[0]: each_arg.split("=")[1] for each_arg in sys.argv[1:] if each_arg.count("=") == 1}
 cli_duration_in_s = int(cli_args["time"])
-cli_batch_num_save = int(cli_args["batch"]) if "batch" in cli_args else 40000
+cli_batch_num_save = int(cli_args["batch"]) if "batch" in cli_args else 15000
 cli_debug_or_info = logging.DEBUG if (("log" in cli_args) and (cli_args["log"] == "debug")) else logging.INFO
 
 # ================ configuring the loggings ==================================================
@@ -95,7 +95,7 @@ def main() -> int:
     logging.info(f"created the directory {ddir}")
 
     dBuf_img0 = np.memmap(os.path.join(ddir, "spectr.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 480, 200), dtype=np.uint8)
-    dBuf_img1 = np.memmap(os.path.join(ddir, "webcam.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 480, 640), dtype=np.uint8)
+    dBuf_img1 = np.memmap(os.path.join(ddir, "webcam.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 480, 640, 3), dtype=np.uint8)
     dBuf_ori  = np.memmap(os.path.join(ddir, "orient.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 7), dtype=np.float64)
     logging.info(f"Creating the MemMap files")
 
@@ -111,7 +111,7 @@ def main() -> int:
     count = 0
     while (time.time() - t0 < cli_duration_in_s):
         dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]
-        dBuf_img1[count, :, :] = cap2.read()[:, :, 0]      
+        dBuf_img1[count, :, :, :] = cap2.read()[:, :, :]      
         dBuf_ori[count, -1] = time.time() - t0
         print(count, f"{time.time() - t0:3.2f}s", "of", cli_duration_in_s)
         count += 1
