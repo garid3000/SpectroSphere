@@ -27,29 +27,30 @@ logging.basicConfig(
 class xVideoCapture:
     def __init__(self, name: str, fourcc: str = "MJPEG", autoexpo=3, fps=15, frame_w=640, frame_h=480):
         # ================ setting the camera setups =================================================
+        self.cam_name = name
         self.cap = cv2.VideoCapture()  # type: ignore
         self.cap.open(name, apiPreference=cv2.CAP_V4L2)
-        logging.debug(f"cam_init: openning {name} camera")
+        logging.info(f"cam_init: openning {name} camera")
 
         self.cap.set(cv2.CAP_PROP_FOURCC,
                      cv2.VideoWriter_fourcc("Y", "U", "Y", "V") if fourcc == "YUYV" else
                      cv2.VideoWriter_fourcc("M", "J", "P", "G"))
-        logging.debug(f"cam_init: setting {name} with {fourcc}")
+        logging.info(f"cam_init: setting {name} with {fourcc}")
                      
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE    , 1)
-        logging.debug(f"cam_init: setting {name} buffersize {1}")
+        logging.info(f"cam_init: setting {name} buffersize {1}")
 
         self.cap.set(cv2.CAP_PROP_AUTO_EXPOSURE , autoexpo)
-        logging.debug(f"cam_init: setting {name} autoexposure {autoexpo}")
+        logging.info(f"cam_init: setting {name} autoexposure {autoexpo}")
 
         self.cap.set(cv2.CAP_PROP_FPS           , fps)
-        logging.debug(f"cam_init: setting {name} fps {fps}")
+        logging.info(f"cam_init: setting {name} fps {fps}")
 
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH   , frame_w)
-        logging.debug(f"cam_init: setting {name} w {frame_w}")
+        logging.info(f"cam_init: setting {name} w {frame_w}")
 
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT  , frame_h)
-        logging.debug(f"cam_init: setting {name} h {frame_h}")
+        logging.info(f"cam_init: setting {name} h {frame_h}")
         # ============================================================================================
 
 
@@ -63,6 +64,7 @@ class xVideoCapture:
     def _reader(self):
         while True:
             ret, frame = self.cap.read()
+            logging.debug(f"cam:{self.cam_name} frame capture thread-wise")
             if not ret:
                 break
             if not self.q.empty():
@@ -73,6 +75,7 @@ class xVideoCapture:
             self.q.put(frame)
 
     def read(self):
+        logging.debug(f"cam:{self.cam_name} frame sending")
         return self.q.get()
 
 
@@ -80,17 +83,21 @@ class xVideoCapture:
 
 def main() -> int:
     cap0 = xVideoCapture("/dev/video0", fourcc="YUYV", fps=30, autoexpo=1)
-    cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=320, frame_h=240)
+    # cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=320, frame_h=240) ------ changed for usb3
+    cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=640, frame_h=480)
+    logging.info(f"main-function: camera's initialized")
 
     ddir = os.path.join(
         "/home/pi/",
         datetime.now().strftime("data_%Y%m%d_%H%M%S_") + cli_args["ddir"],
     )
     os.makedirs(ddir, exist_ok=True)
+    logging.info(f"created the directory {ddir}")
 
     dBuf_img0 = np.memmap(os.path.join(ddir, "spectr.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 480, 200), dtype=np.uint8)
-    dBuf_img1 = np.memmap(os.path.join(ddir, "webcam.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 240, 320), dtype=np.uint8)
+    dBuf_img1 = np.memmap(os.path.join(ddir, "webcam.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 640, 480), dtype=np.uint8)
     dBuf_ori  = np.memmap(os.path.join(ddir, "orient.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 7))
+    logging.info(f"Creating the MemMap files")
 
     #dBuf_img0[:] = 0
     #dBuf_img1[:] = 0
