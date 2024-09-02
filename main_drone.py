@@ -95,7 +95,7 @@ def main() -> int:
     logging.info(f"created the directory {ddir}")
 
     dBuf_img0 = np.memmap(os.path.join(ddir, "spectr.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 480, 200), dtype=np.uint8)
-    dBuf_img1 = np.memmap(os.path.join(ddir, "webcam.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 640, 480), dtype=np.uint8)
+    dBuf_img1 = np.memmap(os.path.join(ddir, "webcam.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 480, 640), dtype=np.uint8)
     dBuf_ori  = np.memmap(os.path.join(ddir, "orient.mmmp.npy"), mode="w+", shape=(cli_batch_num_save, 7))
     logging.info(f"Creating the MemMap files")
 
