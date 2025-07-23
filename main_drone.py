@@ -152,7 +152,14 @@ class Outputter:
         # Start the camera
 
         fourcc = cv2.VideoWriter_fourcc(*str_4c)
-        self.vid = cv2.VideoWriter(output_video, fourcc, fps, (vid_w, vid_h))
+
+        ddir = os.path.join("/home/pi/", datetime.now().strftime("data_%Y%m%d_%H%M%S"))
+        os.makedirs(ddir, exist_ok=True)
+        logging.info(f"created the directory {ddir}")
+        ct0 = time.ctime()
+        os.system('echo "{}" >> {}/0000.time'.format(ct0, ddir))
+
+        self.vid = cv2.VideoWriter(os.path.join(ddir, output_video), fourcc, fps, (vid_w, vid_h))
 
         # =============== starting the queue =========================================================
         self.q = queue.Queue()
@@ -182,20 +189,9 @@ def main() -> int:
 
     logging.info("main-function: camera's initialized")
 
-    ddir = os.path.join(
-        "/home/pi/",
-        datetime.now().strftime("data_%Y%m%d_%H%M%S_") + cli_args["ddir"],
-    )
-    os.makedirs(ddir, exist_ok=True)
-    logging.info(f"created the directory {ddir}")
-
     t0 = time.perf_counter()
-    ct0 = time.ctime()
-    os.system('echo "{}" >> {}/0000.time'.format(ct0, ddir))
-
-    #######################################################################################################################
-    count = 0
     vid_frame = np.empty((481, 1280, 3), np.uint8)
+    count = 0
     forced_lag = 0
     while time.perf_counter() - t0 < cli_duration_in_s:
         # dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]
@@ -212,7 +208,10 @@ def main() -> int:
         vid_frame[479, : len(line_str), 2] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
 
         out.q.put(vid_frame.copy())
-        print(count, f"{time.perf_counter() - t0:3.1f}s of {cli_duration_in_s}\t out_qsize:{out.q.qsize()=}\t {forced_lag=}")
+        print(
+            count,
+            f"{time.perf_counter() - t0:3.1f}s of {cli_duration_in_s}\t out_qsize:{out.q.qsize()=}\t {forced_lag=}",
+        )
         count += 1
 
         if out.q.qsize() >= 30:
