@@ -3,13 +3,14 @@ import cv2
 from curses.ascii import isprint
 
 
-vid = cv2.VideoCapture("/tmp/20250723-193459.avi")
+vid = cv2.VideoCapture("/tmp/asfd.avi")
 
 if not vid.isOpened():
     print("Error: Could not open video.")
     exit()
 
 frame_count = int(vid.get(cv2.CAP_PROP_FRAME_COUNT))
+print(frame_count)
 
 
 num_pixel_with_different_values = 0

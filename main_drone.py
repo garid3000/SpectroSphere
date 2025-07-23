@@ -202,7 +202,7 @@ def main() -> int:
         vid_frame[:480, 640:, :] = cap2.read()[:, :, :]
 
         dt = time.perf_counter() - t0
-        line_str = f"{dt}_{count}_{datetime.now().strftime('data_%Y%m%d_%H%M%S_')}"
+        line_str = f"{count}_{dt}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         vid_frame[479, : len(line_str), 0] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
         vid_frame[479, : len(line_str), 1] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
         vid_frame[479, : len(line_str), 2] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
