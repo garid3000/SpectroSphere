@@ -164,7 +164,7 @@ class Outputter:
         while not outputting_stop_event.is_set():
             frame = self.q.get()
             self.vid.write(frame)
-            print(f"\t out-q size{self.q.qsize()}")
+            # print(f"\t out-q size{self.q.qsize()}")
 
         self.vid.release()
         print("Outputter finished gracefully")
@@ -174,15 +174,13 @@ class Outputter:
 
 
 def main() -> int:
-    # cap0 = xVideoCapture("/dev/video0", fourcc="YUYV", fps=30, autoexpo=1)
     cap0 = xVideoCapture(cli_path_spectr, fourcc="YUYV", fps=30, autoexpo=1)
     # cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=320, frame_h=240) ------ changed for usb3
     # cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=640, frame_h=480)
     cap2 = xRpiCam(frame_w=640, frame_h=480)
+    out = Outputter(output_video=cli_output_video, str_4c="FFV1", vid_h=481, vid_w=1280, fps=7)
 
-    out = Outputter(output_video=cli_output_video, str_4c="FFV1", vid_h=481, vid_w=1280, fps=10)
-
-    logging.info(f"main-function: camera's initialized")
+    logging.info("main-function: camera's initialized")
 
     ddir = os.path.join(
         "/home/pi/",
@@ -198,6 +196,7 @@ def main() -> int:
     #######################################################################################################################
     count = 0
     vid_frame = np.empty((481, 1280, 3), np.uint8)
+    forced_lag = 0
     while time.perf_counter() - t0 < cli_duration_in_s:
         # dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]
         # dBuf_img1[count, :, :, :] = cap2.read()[:, :, :]
@@ -213,9 +212,12 @@ def main() -> int:
         vid_frame[479, : len(line_str), 2] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
 
         out.q.put(vid_frame.copy())
-
-        print(count, f"{time.perf_counter() - t0:3.2f}s", "of", cli_duration_in_s)
+        print(count, f"{time.perf_counter() - t0:3.1f}s of {cli_duration_in_s}\t out_qsize:{out.q.qsize()=}\t {forced_lag=}")
         count += 1
+
+        if out.q.qsize() >= 30:
+            time.sleep(0.2)
+            forced_lag += 1
 
     outputting_stop_event.set()
 
