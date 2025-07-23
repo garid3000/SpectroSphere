@@ -180,55 +180,48 @@ class Outputter:
 # %%
 
 
-def main() -> int:
-    cap0 = xVideoCapture(cli_path_spectr, fourcc="YUYV", fps=30, autoexpo=1)
-    # cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=320, frame_h=240) ------ changed for usb3
-    # cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=640, frame_h=480)
-    cap2 = xRpiCam(frame_w=640, frame_h=480)
-    out = Outputter(output_video=cli_output_video, str_4c="FFV1", vid_h=481, vid_w=1280, fps=7)
+cap0 = xVideoCapture(cli_path_spectr, fourcc="YUYV", fps=30, autoexpo=1)
+# cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=320, frame_h=240) ------ changed for usb3
+# cap2 = xVideoCapture("/dev/video2", fourcc="MJPG", autoexpo=3, frame_w=640, frame_h=480)
+cap2 = xRpiCam(frame_w=640, frame_h=480)
+out = Outputter(output_video=cli_output_video, str_4c="FFV1", vid_h=481, vid_w=1280, fps=7)
 
-    logging.info("main-function: camera's initialized")
+logging.info("main-function: camera's initialized")
 
-    t0 = time.perf_counter()
-    vid_frame = np.empty((481, 1280, 3), np.uint8)
-    count = 0
-    forced_lag = 0
-    while time.perf_counter() - t0 < cli_duration_in_s:
-        # dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]
-        # dBuf_img1[count, :, :, :] = cap2.read()[:, :, :]
-        # dBuf_ori[count, -1] = time.time() - t0
+t0 = time.perf_counter()
+vid_frame = np.empty((481, 1280, 3), np.uint8)
+count = 0
+forced_lag = 0
+while time.perf_counter() - t0 < cli_duration_in_s:
+    # dBuf_img0[count, :, :] = cap0.read()[:, 200:400, 0]
+    # dBuf_img1[count, :, :, :] = cap2.read()[:, :, :]
+    # dBuf_ori[count, -1] = time.time() - t0
 
-        vid_frame[:480, :640, :] = cap0.read()[:, :, :]
-        vid_frame[:480, 640:, :] = cap2.read()[:, :, :]
+    vid_frame[:480, :640, :] = cap0.read()[:, :, :]
+    vid_frame[:480, 640:, :] = cap2.read()[:, :, :]
 
-        dt = time.perf_counter() - t0
-        line_str = f"{count}_{dt}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        vid_frame[479, : len(line_str), 0] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
-        vid_frame[479, : len(line_str), 1] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
-        vid_frame[479, : len(line_str), 2] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
+    dt = time.perf_counter() - t0
+    line_str = f"{count}_{dt}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    vid_frame[479, : len(line_str), 0] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
+    vid_frame[479, : len(line_str), 1] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
+    vid_frame[479, : len(line_str), 2] = np.frombuffer(line_str.encode(), count=len(line_str), dtype=np.uint8)[:]
 
-        out.q.put(vid_frame.copy())
-        print(
-            count,
-            f"{time.perf_counter() - t0:3.1f}s of {cli_duration_in_s}\t out_qsize:{out.q.qsize()=}\t {forced_lag=}",
-        )
-        count += 1
+    out.q.put(vid_frame.copy())
+    print(
+        count,
+        f"{time.perf_counter() - t0:3.1f}s of {cli_duration_in_s}\t out_qsize:{out.q.qsize()=}\t {forced_lag=}",
+    )
+    count += 1
 
-        if out.q.qsize() >= 30:
-            time.sleep(0.2)
-            forced_lag += 1
+    if out.q.qsize() >= 30:
+        time.sleep(0.2)
+        forced_lag += 1
 
-    outputting_stop_event.set()
+outputting_stop_event.set()
 
-    cap0.t.join()
-    print("cap0 is done")
-    cap2.t.join()
-    print("cap2 is done")
-    out.t.join()
-    print("out is done")
-
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+cap0.t.join()
+print("cap0 is done")
+cap2.t.join()
+print("cap2 is done")
+out.t.join()
+print("out is done")
