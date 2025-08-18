@@ -214,11 +214,11 @@ class HardwareCtlThread(threading.Thread):
                 if cmd == CmdType.do_camera_preview:
                     self.cur_state = DevState.manual_camera
                     assert len(cmd_param) == 2
-                    spect_expo = int(cmd_param[0])  # TODO check here
+                    spect_expo = int(cmd_param[0])
                     spect_gain = int(cmd_param[1])
 
                 if cmd == CmdType.ask_motor_status:
-                    self.do_send_motor_status()     # DONE
+                    self.do_send_motor_status()
 
                 if cmd == CmdType.do_motor_control:
                     assert len(cmd_param) == 2
@@ -260,10 +260,8 @@ class HardwareCtlThread(threading.Thread):
                 self.do_measurement_uav( # TODO
                     meas_uav_tag,
                     meas_uav_dur,
-                    e1 = spect_expo,
-                    e2 = spect_gain,
-                #     e3 = man_cam_param[2],
-                #     e4 = man_cam_param[3],
+                    expo = spect_expo,
+                    gain = spect_gain,
                 )
                 self.cur_state = DevState.waiting
             else:
@@ -402,9 +400,10 @@ class HardwareCtlThread(threading.Thread):
             self,
             data_tag: str,
             duration_sec: int | float = 100,
-            e1: int = 312,
-            e2: int = 312,
+            expo: int = 312,
+            gain: int = 20,
     ) -> None:
+        self.cap0.set_exposure_gain(expo, gain) # TODO
         pass
         #print(f"starting UAV measure for {duration_sec} sec")
         #with lock_fbframe:
@@ -670,8 +669,8 @@ class DashAppThread(threading.Thread):
 
                                 dcc.Loading(
                                     children=[
-                                        html.Img(id=DashID.tab1_figpreview.name, style={"width": "100%"}),
                                         dcc.Graph(id=DashID.tab1_oe_hist_gr.name),
+                                        html.Img(id=DashID.tab1_figpreview.name, style={"width": "80%"}),
                                     ],
                                 ),
                                 # dcc.Interval(id=DashID.tab1_live_inter.name, interval=5000, n_intervals=0),
@@ -1078,25 +1077,27 @@ class DashAppThread(threading.Thread):
 
         tmp_spec_img = np.load("/tmp/tmp0.npy")
         tmp_wbcm_img = np.load("/tmp/tmp2.npy")
-        # fig = go.Figure()
-        fig = make_subplots(rows=2, cols=2)
+
+        fig = make_subplots(rows=1, cols=2)
 
         fig.add_trace(
-            go.Heatmap(z=tmp_spec_img, zmin=0, zmax=255, showscale=True, colorscale="Spectral",),
+            go.Heatmap(z=tmp_spec_img[:, :, 0], zmin=0, zmax=255, showscale=True, colorscale="Viridis"),
             row=1,
             col=1,
         )
         fig.add_trace(
-            go.Heatmap(z=tmp_wbcm_img, zmin=0, zmax=255, showscale=True, colorscale="Spectral",),
+            go.Heatmap(z=tmp_wbcm_img[:, :, 0], zmin=0, zmax=255, showscale=True, colorscale="Gray",),
             row=1,
             col=2,
         )
+        fig.update_yaxes(autorange="reversed", row=1, col=1)
+        fig.update_yaxes(autorange="reversed", row=1, col=2)
 
         fig.update_layout(
             title="Camera Preview",
-            xaxis_title="Value",
-            yaxis_title="Number of Pixels",
-            barmode="overlay",
+            #xaxis_title="Value",
+            #yaxis_title="Number of Pixels",
+            #barmode="overlay",
         )
 
         return array_to_base64(tmp_spec_img), fig
@@ -1186,6 +1187,7 @@ class DashAppThread(threading.Thread):
         Output(component_id=DashID.tab4_rapid_prg.name, component_property="value"),
         Output(component_id=DashID.tab4_rapid_prg.name, component_property="label"),
         Input(component_id=DashID.tab4_rapid_liv.name, component_property="n_intervals"),
+        prevent_initial_call=True,
     )
     def callback_tab4_live_interval(n):  # -> tuple[float, str]:
         res = 0
