@@ -306,10 +306,7 @@ class HardwareCtlThread(threading.Thread):
     def do_measurement_gimbal(self, elv_range:tuple[int, int], azi_range:tuple[int, int], data_tag:str) -> None: # TODO
         self.dBuf_img0 = np.zeros((4000, 480, 200), dtype=np.uint8)
         self.dBuf_img1 = np.zeros((4000, 240, 320), dtype=np.uint8)
-        self.dBuf_ori = np.zeros((4000, 7))
-
-        if self.gimbal_motor is None :
-            return
+        self.dBuf_ori  = np.zeros((4000, 7))
 
         elv0, elv1 = int(elv_range[0]), int(elv_range[1]+1)
         azi0, azi1 = int(azi_range[0]), int(azi_range[1]+1)
@@ -320,16 +317,9 @@ class HardwareCtlThread(threading.Thread):
         ddir = f"{DATDIR}/GIMBAL_{start_ymd_hms}_{tmp_data_tag}"
         os.makedirs(ddir, exist_ok=True)
 
-        #for el in range(el0, el1, d_el * 2):
-        #    for az in range(az0, az1, d_az):
-        #        self.gimbal_motor.goto(az, el, True)
-        #        queue_motor_progress.put((( el - el0 ) / (el1-el0), ( az - az0 ) / (az1 - az0)))
-
-        #    for az in range(az0, az1, d_az)[::-1]:
-        #        self.gimbal_motor.goto(az, el+d_el, True)
-        #        cv2.imwrite(fname, img123)
-        #        queue_motor_progress.put((( el + d_el - el0 ) / (el1-el0), ( az - az0 ) / (az1 - az0)))
-        #queue_motor_progress.put((1, 1))
+        if self.gimbal_motor is None:
+            print("no motor")
+            return
 
         for el in range(elv0, elv1, 10):
             self.gimbal_motor.goto(azi0, el, True)
@@ -770,33 +760,30 @@ class DashAppThread(threading.Thread):
                                     ],
                                     className="mb-3",
                                 ),
-                                dbc.Row(
-                                    [
-                                        dbc.Label("ELV step: ", html_for=DashID.tab3_mtr_elvst.name, width=3),
-                                        dbc.Col(
-                                            dbc.Input(
-                                                value = 10, type="number", id=DashID.tab3_mtr_elvst.name, placeholder="Enter step",
-                                            ),
-                                            width=9,
-                                        ),
-
-                                    ],
-                                    className="mb-3",
-                                ),
-
-                                dbc.Row(
-                                    [
-                                        dbc.Label("AZI step: ", html_for=DashID.tab3_mtr_azist.name, width=3),
-                                        dbc.Col(
-                                            dbc.Input(
-                                                value = 10, type="number", id=DashID.tab3_mtr_azist.name, placeholder="Enter step",
-                                            ),
-                                            width=9,
-                                        ),
-
-                                    ],
-                                    className="mb-3",
-                                ),
+                                #dbc.Row(
+                                #    [
+                                #        dbc.Label("ELV step: ", html_for=DashID.tab3_mtr_elvst.name, width=3),
+                                #        dbc.Col(
+                                #            dbc.Input(
+                                #                value = 10, type="number", id=DashID.tab3_mtr_elvst.name, placeholder="Enter step",
+                                #            ),
+                                #            width=9,
+                                #        ),
+                                #    ],
+                                #    className="mb-3",
+                                #),
+                                #dbc.Row(
+                                #    [
+                                #        dbc.Label("AZI step: ", html_for=DashID.tab3_mtr_azist.name, width=3),
+                                #        dbc.Col(
+                                #            dbc.Input(
+                                #                value = 10, type="number", id=DashID.tab3_mtr_azist.name, placeholder="Enter step",
+                                #            ),
+                                #            width=9,
+                                #        ),
+                                #    ],
+                                #    className="mb-3",
+                                #),
 
                                 dbc.Row(
                                     [
@@ -1116,16 +1103,11 @@ class DashAppThread(threading.Thread):
         Input(DashID.tab3_mtrms_cnf.name, "submit_n_clicks"),
         State(DashID.tab3_mtr_elvrn.name, "value"),
         State(DashID.tab3_mtr_azirn.name, "value"),
-        State(DashID.tab3_mtr_elvst.name, "value"),
-        State(DashID.tab3_mtr_azist.name, "value"),
         State(DashID.tab3_mtrms_tag.name, "value"),
-        #State(DashID.tab3_mt.name, "value"),
-        #State(DashID.tab4_rapid_tag.name, "value"),
-        #State(DashID.tab4_rapid_dur.name, "value"),
         prevent_initial_call=True,
     )
-    def callback_tab3_start_measurement(confirm_n_clicks, elv_range, azi_range, d_elv, d_azi, data_tag):
-        print('asfd', elv_range, type(elv_range))
+    def callback_tab3_start_measurement(confirm_n_clicks, elv_range, azi_range, data_tag):
+        print("asdf asdf", elv_range, type(elv_range))
 
         tmp_data_tag = data_tag if isinstance(data_tag, str) else "tmp_data"
         queue_cmd.put(
