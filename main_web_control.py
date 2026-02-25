@@ -624,8 +624,8 @@ class DashAppThread(threading.Thread):
                                 ),
                                 dbc.Row(
                                     [
-                                        dbc.Label("Spectrometer gain", html_for=DashID.tab1_gain_slidr.name, width=3),
-                                        dbc.Col(dcc.Slider(0, 33, 1, value=8, id=DashID.tab1_gain_slidr.name), width=9,), # pyright: ignore
+                                        dbc.Label("Spectrometer gain", html_for=DashID.tab1_gain_slidr.name, width=3, ),
+                                        dbc.Col(dcc.Slider(0, 33, value=8, id=DashID.tab1_gain_slidr.name, tooltip={"placement": "top", "always_visible": True}), width=9, ), # pyright: ignore
                                     ],
                                     className="mb-3",
                                 ),
@@ -735,9 +735,11 @@ class DashAppThread(threading.Thread):
                                             dcc.RangeSlider(
                                                 -90,
                                                 90,
+                                                #5,
                                                 value=[-30, 0],
                                                 id=DashID.tab3_mtr_elvrn.name,
                                                 tooltip={"placement": "top", "always_visible": True},
+                                                allowCross=False
                                             ),
                                             width=9,
                                         ),
@@ -751,9 +753,11 @@ class DashAppThread(threading.Thread):
                                             dcc.RangeSlider(
                                                 -180,
                                                 180,
+                                                #5,
                                                 value=[-90, 90],
                                                 id=DashID.tab3_mtr_azirn.name,
                                                 tooltip={"placement": "bottom", "always_visible": True},
+                                                allowCross=False
                                             ),
                                             width=9,
                                         ),
